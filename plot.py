@@ -19,13 +19,31 @@ def plot_month_line(df:pd.DataFrame, save_path):
     for i in range(len(cats)):
         col = cats[i]
         sub = df[df['分类'] == col]
-        ax = get_axes_pos(axes, height, i//width, i%width)
+        ax = get_axes_pos(axes, width, height, i//width, i%width)
         sns.barplot(data=sub, x='月份', y='金额', hue='子分类', ax=ax, legend='full')
     logging.info(f'save plotting to {save_path}')
     plt.savefig(save_path, dpi=300)
 
 
-def get_axes_pos(axes, height, x, y):
-    if height <= 1:
+def get_axes_pos(axes, width, height, x, y):
+    if height == 1:
         return axes[y]
+    if width == 1:
+        return axes[x]
     return axes[x, y]
+
+
+def plot_year_line(df:pd.DataFrame, save_path):
+    cats = df['收支'].drop_duplicates().tolist()
+
+    width = 1
+    height = (len(cats)-1) // width + 1  # 向上取整
+    fig, axes = plt.subplots(height, width, figsize=(5*width, 4*height))
+
+    for i in range(len(cats)):
+        col = cats[i]
+        sub = df[df['收支'] == col]
+        ax = get_axes_pos(axes, width, height, i//width, i%width)
+        sns.barplot(data=sub, x='年份', y='金额', ax=ax, legend='full')
+    logging.info(f'save plotting to {save_path}')
+    plt.savefig(save_path, dpi=300)
