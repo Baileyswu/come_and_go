@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 from cg.manager import Manager
-from cg import logger
-
+from cg.log import logger
 
 ENTRY = {
     0: '支出',
@@ -16,7 +15,9 @@ def init_manager():
 
 
 def show_selected():
-    df = m.select_ones()
+    if st.button('下一条'):
+        m.update_head()
+    df = m.get_head()
     st.write(df)
     return df
 
@@ -31,17 +32,20 @@ def show_options():
     return options
 
 
-def operate(options, df):
-    cols = st.columns(2)
-    for i in range(2):
-        if cols[i].button(f'确认{ENTRY[i]}'):
-            df = m.get_label_and_move(df, options[i])
-            st.write(df)
-            st.write('还需打标:', m.get_dirty_size())
-            st.write('已经存储数据:', m.get_clean_size())
-            st.write('位置:', m.clean_path)
+def operate(col, option, df, entry):
+    if col.button(f'确认{entry}'):
+        df = m.get_label_and_move(df, option)
+        st.write('打标结果', '（还需打标:', m.get_dirty_size(), ', 已经存储:', m.get_clean_size(), '）')
+        st.write(df)
+        st.write('位置:', m.clean_path)
     # sp = m.sweep()
     # st.write(sp)
+
+
+def show_operations(options, df):
+    cols = st.columns(2)
+    for i in range(2):
+        operate(cols[i], options[i], df, ENTRY[i])
 
 
 if __name__ == '__main__':
@@ -51,7 +55,7 @@ if __name__ == '__main__':
         df = show_selected()
         options = show_options()
         logger.info(options)
-        operate(options, df)
+        show_operations(options, df)
     else:
         st.write('打标完成！')
     logger.info('end server')
