@@ -34,11 +34,12 @@ def show_options():
 def operate(col, option, df, entry):
     if col.button(f'确认{entry}'):
         df = mg.get_label_and_move(df, option)
-        st.write('打标结果', '（还需打标:', mg.get_dirty_size(), ', 已经存储:', mg.get_clean_size(), '）')
         st.write(df)
         st.write('位置:', mg.clean_path)
-    # sp = mg.sweep()
-    # st.write(sp)
+        sp = mg.sweep()
+        if sp is not None and len(sp) > 0:
+            st.write('同类整理')
+            st.write(sp)
 
 
 def show_operations(options, df):
@@ -47,14 +48,22 @@ def show_operations(options, df):
         operate(cols[i], options[i], df, ENTRY[i])
 
 
-def show_refresh():
-    if st.button('下一条'):
+def show_refresh(con):
+    if con.button('下一条'):
         mg.update_head()
+
+
+def show_left(con):
+    con.write(f'（还需打标: {mg.get_dirty_size()} 已经存储: {mg.get_clean_size()}）')
+    pass
 
 
 def whole_page():
     if mg.get_dirty_size() > 0:
-        show_refresh()
+        c = st.columns(2)
+        show_refresh(c[0])
+        show_left(c[1])
+        st.write(f'（还需打标: {mg.get_dirty_size()} 已经存储: {mg.get_clean_size()}）')
         df = show_selected()
         options = show_options()
         logger.info(options)
@@ -62,7 +71,12 @@ def whole_page():
     else:
         st.write('打标完成！')
 
+
 def run():
     logger.info('-------------------- labeling ----------------------')
     whole_page()
     logger.info('end label')
+
+
+if __name__ == '__main__':
+    run()

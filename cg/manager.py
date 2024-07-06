@@ -24,10 +24,13 @@ class Manager(object):
         self.model = Model()
         self.head = None
         self.update_head()
-        # self.sweep()
+        self.sweep()
+        self.show_cols = [ 'score', 'label', '日期', '金额', '交易对方', '备注']
+
 
     def get_label_set(self):
         return self._get_label_set(self.clean)
+
 
     def _get_label_set(self, df: pd.DataFrame):
         assert '分类' in df.columns and '子分类' in df.columns, '先填入分类和子分类'
@@ -81,39 +84,46 @@ class Manager(object):
 
     def sweep(self):
         logger.info('sweep...')
-        logger.info(f'clean_size: {self.get_clean_size()}')
-        logger.info(f'dirty_size: {self.get_dirty_size()}')
         self.model.train(self.clean)
         self.model.predict(self.dirty)
-        sp = self.dirty[self.dirty.score > 0.9]
+        sp = self.dirty[self.dirty.score > 0.8]
+        if len(sp) == 0:
+            logger.info('no more sweep')
+            return None
         self._format_data(sp)
         self._move(sp)
         self._save()
-        return sp
+        return sp[self.show_cols]
 
 
     def get_label_and_move(self, df:pd.DataFrame, label):
         logger.info('get_label_and_move...')
         df['label'] = label
+        df['score'] = 1
         self._format_data(df)
         self._move(df)
         self._save()
-        return df[['日期', '金额', '收支', '分类', '子分类', '备注']]
+        return df[self.show_cols]
 
 
     def _move(self, df:pd.DataFrame):
-        if len(df) == 0: return None
+        if len(df) == 0: 
+            logger.warning('_move null')
+            return None
         self.clean = pd.concat([self.clean, df], axis=0, ignore_index=True)
         self.dirty = self.dirty.drop(df.index)
 
 
     def _save(self):
+        logger.info('saving files')
         self._save_clean()
         self._save_dirty()
 
 
     def _format_data(self, df):
-        if len(df) == 0: return None
+        if len(df) == 0: 
+            logger.warning('_format_data null')
+            return None
         group = df['label'].apply(lambda x: x.split('-'))
         dtime = pd.to_datetime(df['交易时间'])
         df['收支'] = group.apply(lambda x: x[0])
