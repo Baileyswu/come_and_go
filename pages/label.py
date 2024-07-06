@@ -10,7 +10,7 @@ ENTRY = {
 
 @st.cache_resource
 def init_manager():
-    return Manager('data/go')
+    return Manager('data/go').init_sub('WxManager')
 
 mg = init_manager()
 

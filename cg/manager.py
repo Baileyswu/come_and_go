@@ -1,6 +1,5 @@
 import warnings
 import pandas as pd
-import logging
 from .tools import save_data, load_cache, create_pd_dict
 from .model import Model
 from .log import logger
@@ -9,10 +8,19 @@ warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
 
 class Manager(object):
 
+    subclassdict = {}
+
+    def __init_subclass__(cls):
+        '''子类注册时生成映射表'''
+        Manager.subclassdict.update({cls.__name__: cls})
+        logger.info(f'register: {cls.__name__}')
+        
+
     def __init__(self, folder_path) -> None:
         logger.info('==>init manager<==')
 
         # 数据存储
+        self.folder_path = folder_path
         self.dirty_path = '/'.join([folder_path, 'dirty.csv'])
         self.clean_path = '/'.join([folder_path, 'clean.csv'])
         self.skip_path = '/'.join([folder_path, 'skip.csv'])
@@ -33,10 +41,22 @@ class Manager(object):
         # static choice
         self.head = None
         self.update_head()
-        self.show_cols = [ 'score', 'label', '日期', '金额', '交易对方', '备注']
+        self.show_cols = ['score', 'label', '日期', '金额', '交易对方', '备注']
 
         # warning
         self.warn_msg = None
+
+
+    def init_sub(self, name):
+        '''通过name调用相应的子类'''
+        try:
+            cls = self.subclassdict.get(name)
+            return cls(self.folder_path)
+        except Exception as e:
+            logger.error(e)
+            logger.info(Manager.subclassdict.keys())
+            logger.warning(f'{name} not exists, use default base {__class__.__name__}')
+            return self
 
 
     def get_label_set(self):
@@ -177,9 +197,7 @@ class Manager(object):
 
 
     def _init_skip(self):
-        sk = self.dirty[(self.dirty['收/支'] == '不计收支') | (self.dirty['交易状态'] == '交易关闭')]
-        self.dirty, self.skip = self._move(sk, self.dirty, self.skip)
-        self._save()
+        pass
 
 
     def _check_label(self, df):

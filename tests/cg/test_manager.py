@@ -27,3 +27,7 @@ def test_manager_skip():
     m = Manager('data/go')
     df = m.get_head()
     m.skip_label(df)
+
+def test_manager_sub_cls():
+    m = Manager('data/go').init_sub('WxManager')
+    m.get_head()

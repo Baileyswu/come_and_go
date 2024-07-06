@@ -9,13 +9,13 @@ plt.rcParams['axes.unicode_minus'] = False   # 解决保存图像是负号'-'显
 
 
 def plot_all():
-    df = pd.read_csv('data/feishu.csv')
+    df = pd.read_csv('data/go/clean.csv')
     stats = df.groupby(['年份', '收支']).sum('金额').reset_index()
     plot_year_line(stats, 'years.png', '所有年份收支情况')
 
 
 def plot(year):
-    df = pd.read_csv('data/feishu.csv')
+    df = pd.read_csv('data/go/clean.csv')
     df['money'] = df.apply(lambda r: r['金额'] if r['收支']=='收入' else -r['金额'], axis=1)
     stats = df.groupby(['年份', '月份', '分类', '子分类']).sum('money').reset_index()
 
