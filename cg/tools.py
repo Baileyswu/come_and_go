@@ -78,7 +78,9 @@ def load_cache(path) -> pd.DataFrame:
         logging.error('path is None')
         return pd.DataFrame({})
     if os.path.exists(path):
-        return pd.read_csv(path)
+        df = pd.read_csv(path)
+        logging.info(f'tot: {len(df)}')
+        return df
     logging.info('cache not exists')
     return pd.DataFrame({})
 

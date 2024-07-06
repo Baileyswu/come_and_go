@@ -10,7 +10,7 @@ ENTRY = {
 
 @st.cache_resource
 def init_manager():
-    return Manager('data/dirty.csv', 'data/clean.csv')
+    return Manager('data/go')
 
 mg = init_manager()
 
@@ -35,7 +35,6 @@ def operate(col, option, df, entry):
     if col.button(f'确认{entry}'):
         df = mg.get_label_and_move(df, option)
         st.write(df)
-        st.write('位置:', mg.clean_path)
         sp = mg.sweep()
         if sp is not None and len(sp) > 0:
             st.write('同类整理')
@@ -49,21 +48,26 @@ def show_operations(options, df):
 
 
 def show_refresh(con):
-    if con.button('下一条'):
+    if con.button('刷新'):
+        mg.update_head()
+
+
+def show_skip(con):
+    if con.button('跳过'):
+        mg.skip_label(mg.get_head())
         mg.update_head()
 
 
 def show_left(con):
-    con.write(f'（还需打标: {mg.get_dirty_size()} 已经存储: {mg.get_clean_size()}）')
-    pass
+    con.write(f'还需打标:{mg.get_dirty_size()}')
 
 
 def whole_page():
     if mg.get_dirty_size() > 0:
-        c = st.columns(2)
+        c = st.columns(3)
         show_refresh(c[0])
-        show_left(c[1])
-        st.write(f'（还需打标: {mg.get_dirty_size()} 已经存储: {mg.get_clean_size()}）')
+        show_skip(c[1])
+        show_left(c[2])
         df = show_selected()
         options = show_options()
         logger.info(options)

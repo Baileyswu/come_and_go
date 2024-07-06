@@ -9,22 +9,29 @@ warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
 
 class Manager(object):
 
-    def __init__(self, dirty_path, clean_path) -> None:
+    def __init__(self, folder_path) -> None:
         logger.info('==>init manager<==')
-        self.dirty = load_cache(dirty_path)
-        self.clean = load_cache(clean_path)
-        logger.info(f'clean_size: {self.get_clean_size()}')
-        logger.info(f'dirty_size: {self.get_dirty_size()}')
-        self.dirty_path = dirty_path
-        self.clean_path = clean_path
+
+        # 数据存储
+        self.dirty_path = '/'.join([folder_path, 'dirty.csv'])
+        self.clean_path = '/'.join([folder_path, 'clean.csv'])
+        self.skip_path = '/'.join([folder_path, 'skip.csv'])
+        self.dirty = load_cache(self.dirty_path)
+        self.clean = load_cache(self.clean_path)
+        self.skip = load_cache(self.skip_path)
+        self._init_dirty()
+        self._init_clean()
+
+        # label
         self.label_set = self._get_label_set(self.clean)
         self.cat_set = self._get_cat_set(self.clean)
-        self.dirty['score'] = 0
-        self.dirty['label'] = None
+
+        # model
         self.model = Model()
+
+        # static choice
         self.head = None
         self.update_head()
-        self.sweep()
         self.show_cols = [ 'score', 'label', '日期', '金额', '交易对方', '备注']
 
 
@@ -32,20 +39,16 @@ class Manager(object):
         return self._get_label_set(self.clean)
 
 
-    def _get_label_set(self, df: pd.DataFrame):
-        assert '分类' in df.columns and '子分类' in df.columns, '先填入分类和子分类'
-        df['子分类'] = df['子分类'].fillna('null')
-        df['label'] = df['收支'] + '-' + df['分类'] + '-' + df['子分类']
-        return df['label'].value_counts().index
-    
-
-    def _get_cat_set(self, df: pd.DataFrame):
-        tmp = df['收支'] + '-' + df['分类']
-        return tmp.value_counts().index
-
-
     def get_dirty_size(self):
         return len(self.dirty) if self.dirty is not None else 0
+    
+    
+    def get_clean_size(self):
+        return len(self.clean) if self.clean is not None else 0
+
+
+    def get_skip_size(self):
+        return len(self.skip) if self.skip is not None else 0
 
 
     def update_head(self):
@@ -65,9 +68,34 @@ class Manager(object):
         return self.head
 
 
-    def get_clean_size(self):
-        return len(self.clean) if self.clean is not None else 0
+    def sweep(self):
+        logger.info('sweep...')
+        self.model.train(self.clean)
+        self.model.predict(self.dirty)
+        sp = self.dirty[self.dirty.score > 0.8]
+        if len(sp) == 0:
+            logger.info('no more sweep')
+            return None
+        self._format_data(sp)
+        self.dirty, self.clean = self._move(sp, self.dirty, self.clean)
+        self._save()
+        return sp[self.show_cols]
 
+
+    def get_label_and_move(self, df:pd.DataFrame, label):
+        logger.info('get_label_and_move...')
+        df['label'] = label
+        df['score'] = 1
+        self._format_data(df)
+        self.dirty, self.clean = self._move(df, self.dirty, self.clean)
+        self._save()
+        return df[self.show_cols]
+
+
+    def skip_label(self, df:pd.DataFrame):
+        logger.info('skip_label...')
+        self.dirty, self.skip = self._move(df, self.dirty, self.skip)
+        self._save()
 
     def find_similar(self, df):
         dc = self.clean[self.clean.id.isin(df.id.tolist())]
@@ -81,43 +109,25 @@ class Manager(object):
     def _save_dirty(self):
         save_data(self.dirty, self.dirty_path)
 
-
-    def sweep(self):
-        logger.info('sweep...')
-        self.model.train(self.clean)
-        self.model.predict(self.dirty)
-        sp = self.dirty[self.dirty.score > 0.8]
-        if len(sp) == 0:
-            logger.info('no more sweep')
-            return None
-        self._format_data(sp)
-        self._move(sp)
-        self._save()
-        return sp[self.show_cols]
+    
+    def _save_skip(self):
+        save_data(self.skip, self.skip_path)
 
 
-    def get_label_and_move(self, df:pd.DataFrame, label):
-        logger.info('get_label_and_move...')
-        df['label'] = label
-        df['score'] = 1
-        self._format_data(df)
-        self._move(df)
-        self._save()
-        return df[self.show_cols]
-
-
-    def _move(self, df:pd.DataFrame):
+    def _move(self, df:pd.DataFrame, source, target):
         if len(df) == 0: 
             logger.warning('_move null')
             return None
-        self.clean = pd.concat([self.clean, df], axis=0, ignore_index=True)
-        self.dirty = self.dirty.drop(df.index)
+        target = pd.concat([target, df], axis=0, ignore_index=True)
+        source = source.drop(df.index)
+        return source, target
 
 
     def _save(self):
         logger.info('saving files')
         self._save_clean()
         self._save_dirty()
+        self._save_skip()
 
 
     def _format_data(self, df):
@@ -135,3 +145,24 @@ class Manager(object):
         df['备注'] = df['商品说明']
         logger.info(f'formated:\n{df}')
         return df
+    
+
+    def _get_label_set(self, df: pd.DataFrame):
+        assert '分类' in df.columns and '子分类' in df.columns, '先填入分类和子分类'
+        df['子分类'] = df['子分类'].fillna('null')
+        df['label'] = df['收支'] + '-' + df['分类'] + '-' + df['子分类']
+        return df['label'].value_counts().index
+    
+
+    def _get_cat_set(self, df: pd.DataFrame):
+        tmp = df['收支'] + '-' + df['分类']
+        return tmp.value_counts().index
+    
+
+    def _init_dirty(self):
+        self.dirty['score'] = 0
+        self.dirty['label'] = None
+
+
+    def _init_clean(self):
+        pass
