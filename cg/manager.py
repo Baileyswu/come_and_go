@@ -21,6 +21,7 @@ class Manager(object):
         self.skip = load_cache(self.skip_path)
         self._init_dirty()
         self._init_clean()
+        self._init_skip()
 
         # label
         self.label_set = self._get_label_set(self.clean)
@@ -39,6 +40,7 @@ class Manager(object):
 
 
     def get_label_set(self):
+        logger.info('get_label_set')
         return self._get_label_set(self.clean)
 
 
@@ -172,6 +174,12 @@ class Manager(object):
 
     def _init_clean(self):
         pass
+
+
+    def _init_skip(self):
+        sk = self.dirty[(self.dirty['收/支'] == '不计收支') | (self.dirty['交易状态'] == '交易关闭')]
+        self.dirty, self.skip = self._move(sk, self.dirty, self.skip)
+        self._save()
 
 
     def _check_label(self, df):
