@@ -34,7 +34,14 @@ def show_options():
 def operate(col, option, df, entry):
     if col.button(f'确认{entry}'):
         df = mg.get_label_and_move(df, option)
-        st.write(df)
+        if df is None or len(df) == 0:
+            # 标记收入支出冲突时会弹错误
+            st.warning(mg.warn_msg, icon="⚠️")
+            return
+        else:
+            st.write(df)
+
+        # 同类整理
         sp = mg.sweep()
         if sp is not None and len(sp) > 0:
             st.write('同类整理')

@@ -1,7 +1,7 @@
 import warnings
 import pandas as pd
 import logging
-from .tools import save_data, load_cache
+from .tools import save_data, load_cache, create_pd_dict
 from .model import Model
 from .log import logger
 
@@ -33,6 +33,9 @@ class Manager(object):
         self.head = None
         self.update_head()
         self.show_cols = [ 'score', 'label', '日期', '金额', '交易对方', '备注']
+
+        # warning
+        self.warn_msg = None
 
 
     def get_label_set(self):
@@ -77,6 +80,7 @@ class Manager(object):
             logger.info('no more sweep')
             return None
         self._format_data(sp)
+        sp = self._check_label(sp)
         self.dirty, self.clean = self._move(sp, self.dirty, self.clean)
         self._save()
         return sp[self.show_cols]
@@ -87,6 +91,7 @@ class Manager(object):
         df['label'] = label
         df['score'] = 1
         self._format_data(df)
+        df = self._check_label(df)
         self.dirty, self.clean = self._move(df, self.dirty, self.clean)
         self._save()
         return df[self.show_cols]
@@ -96,6 +101,7 @@ class Manager(object):
         logger.info('skip_label...')
         self.dirty, self.skip = self._move(df, self.dirty, self.skip)
         self._save()
+
 
     def find_similar(self, df):
         dc = self.clean[self.clean.id.isin(df.id.tolist())]
@@ -117,7 +123,7 @@ class Manager(object):
     def _move(self, df:pd.DataFrame, source, target):
         if len(df) == 0: 
             logger.warning('_move null')
-            return None
+            return source, target
         target = pd.concat([target, df], axis=0, ignore_index=True)
         source = source.drop(df.index)
         return source, target
@@ -166,3 +172,13 @@ class Manager(object):
 
     def _init_clean(self):
         pass
+
+
+    def _check_label(self, df):
+        tmp = df[df['收/支'] != df['label'].apply(lambda x: x[:2])]
+        df = df.drop(tmp.index)
+        if len(df) == 0:
+            self.warn_msg = f'conflict 收/支\n{tmp[self.show_cols]}'
+            logger.warning(self.warn_msg)
+            return df
+        return df
