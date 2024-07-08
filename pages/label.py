@@ -65,16 +65,22 @@ def show_skip(con):
         mg.update_head()
 
 
+def show_reload(con):
+    if con.button('重载'):
+        mg.reload_file()
+
+
 def show_left(con):
     con.write(f'还需打标:{mg.get_dirty_size()}')
 
 
 def whole_page():
     if mg.get_dirty_size() > 0:
-        c = st.columns(3)
+        c = st.columns(4)
         show_refresh(c[0])
         show_skip(c[1])
-        show_left(c[2])
+        show_reload(c[2])
+        show_left(c[3])
         df = show_selected()
         options = show_options()
         logger.info(options)

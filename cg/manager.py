@@ -62,6 +62,13 @@ class Manager(object):
     def get_label_set(self):
         logger.info('get_label_set')
         return self._get_label_set(self.clean)
+    
+
+    def reload_file(self):
+        logger.info('reloading file')
+        self.dirty = load_cache(self.dirty_path)
+        self.clean = load_cache(self.clean_path)
+        self.skip = load_cache(self.skip_path)
 
 
     def get_dirty_size(self):
