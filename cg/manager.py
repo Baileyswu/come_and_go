@@ -1,6 +1,6 @@
 import warnings
 import pandas as pd
-from .tools import save_data, load_cache, create_pd_dict
+from .tools import save_data, load_cache, create_pd_dict, is_contains
 from .model import Model
 from .log import logger
 
@@ -57,6 +57,19 @@ class Manager(object):
             logger.info(Manager.subclassdict.keys())
             logger.warning(f'{name} not exists, use default base {__class__.__name__}')
             return self
+
+
+    def decide_sub(self):
+        '''
+        根据数据列名知晓账单来源，初始化对应的解析器
+        '''
+        if is_contains(self.dirty.columns, ['交易时间', '交易类型', '交易对方', '商品', '收/支', '金额(元)', '支付方式', '当前状态', '交易单号',
+       '商户单号', '备注']):
+            return self.init_sub('WxManager')
+        if is_contains(self.dirty.columns, ['交易时间', '交易分类', '交易对方', '对方账号', '商品说明', '收/支', '金额', '收/付款方式', '交易状态',
+       '交易订单号', '商家订单号', '备注']):
+            return self.init_sub('ZfbManager')
+        return self
 
 
     def get_label_set(self):

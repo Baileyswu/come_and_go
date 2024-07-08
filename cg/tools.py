@@ -141,3 +141,10 @@ def load_yaml(path):
     with open(path, 'r', encoding='utf-8') as file:
         loaded_data = yaml.safe_load(file)
     return loaded_data
+
+
+def is_contains(parent, children):
+    for child in children:
+        if child not in parent:
+            return False
+    return True
