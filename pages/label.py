@@ -8,9 +8,11 @@ ENTRY = {
     1: '收入'
 }
 
+
 @st.cache_resource
 def init_manager():
     return Manager('data/go').decide_sub()
+
 
 mg = init_manager()
 
@@ -25,7 +27,8 @@ def show_options():
     label_set = mg.get_label_set()
     cols = st.columns(2)
     options = [
-        cols[i].selectbox(ENTRY[i], [label for label in label_set if label.startswith(ENTRY[i])])
+        cols[i].selectbox(
+            ENTRY[i], [label for label in label_set if label.startswith(ENTRY[i])])
         for i in range(2)
     ]
     return options

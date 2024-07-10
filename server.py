@@ -2,6 +2,7 @@ from pages import label, plot
 from cg.log import logger
 import streamlit as st
 
+
 def next_page():
     if 'page' not in st.session_state:
         st.session_state.page = 'label'
@@ -17,5 +18,6 @@ def next_page():
         else:
             st.session_state.page = 'label'
 
+
 if __name__ == '__main__':
-    label.run()
+    pass

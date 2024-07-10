@@ -6,6 +6,7 @@ from .log import logger
 
 warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
 
+
 class Manager(object):
 
     subclassdict = {}
@@ -14,7 +15,6 @@ class Manager(object):
         '''子类注册时生成映射表'''
         Manager.subclassdict.update({cls.__name__: cls})
         logger.info(f'register: {cls.__name__}')
-        
 
     def __init__(self, folder_path) -> None:
         logger.info('==>init manager<==')
@@ -46,7 +46,6 @@ class Manager(object):
         # warning
         self.warn_msg = None
 
-
     def init_sub(self, name):
         '''通过name调用相应的子类'''
         try:
@@ -55,27 +54,25 @@ class Manager(object):
         except Exception as e:
             logger.error(e)
             logger.info(Manager.subclassdict.keys())
-            logger.warning(f'{name} not exists, use default base {__class__.__name__}')
+            logger.warning(f'{name} not exists, use default base {
+                           __class__.__name__}')
             return self
-
 
     def decide_sub(self):
         '''
         根据数据列名知晓账单来源，初始化对应的解析器
         '''
         if is_contains(self.dirty.columns, ['交易时间', '交易类型', '交易对方', '商品', '收/支', '金额(元)', '支付方式', '当前状态', '交易单号',
-       '商户单号', '备注']):
+                                            '商户单号', '备注']):
             return self.init_sub('WxManager')
         if is_contains(self.dirty.columns, ['交易时间', '交易分类', '交易对方', '对方账号', '商品说明', '收/支', '金额', '收/付款方式', '交易状态',
-       '交易订单号', '商家订单号', '备注']):
+                                            '交易订单号', '商家订单号', '备注']):
             return self.init_sub('ZfbManager')
         return self
-
 
     def get_label_set(self):
         logger.info('get_label_set')
         return self._get_label_set(self.clean)
-    
 
     def reload_file(self):
         logger.info('reloading file')
@@ -83,18 +80,14 @@ class Manager(object):
         self.clean = load_cache(self.clean_path)
         self.skip = load_cache(self.skip_path)
 
-
     def get_dirty_size(self):
         return len(self.dirty) if self.dirty is not None else 0
-    
-    
+
     def get_clean_size(self):
         return len(self.clean) if self.clean is not None else 0
 
-
     def get_skip_size(self):
         return len(self.skip) if self.skip is not None else 0
-
 
     def update_head(self):
         logger.info('update self.head')
@@ -104,14 +97,12 @@ class Manager(object):
             logger.warning('no more dirty data')
             self.head = None
 
-
     def get_head(self):
         if self.head is None:
             logger.warning('get_head:head is None')
         else:
             logger.info(f'get_head:\n{self.head}')
         return self.head
-
 
     def sweep(self):
         logger.info('sweep...')
@@ -127,8 +118,7 @@ class Manager(object):
         self._save()
         return sp[self.show_cols]
 
-
-    def get_label_and_move(self, df:pd.DataFrame, label):
+    def get_label_and_move(self, df: pd.DataFrame, label):
         logger.info('get_label_and_move...')
         df['label'] = label
         df['score'] = 1
@@ -138,38 +128,31 @@ class Manager(object):
         self._save()
         return df[self.show_cols]
 
-
-    def skip_label(self, df:pd.DataFrame):
+    def skip_label(self, df: pd.DataFrame):
         logger.info('skip_label...')
         self.dirty, self.skip = self._move(df, self.dirty, self.skip)
         self._save()
-
 
     def find_similar(self, df):
         dc = self.clean[self.clean.id.isin(df.id.tolist())]
         return dc
 
-
     def _save_clean(self):
         save_data(self.clean, self.clean_path)
-
 
     def _save_dirty(self):
         save_data(self.dirty, self.dirty_path)
 
-    
     def _save_skip(self):
         save_data(self.skip, self.skip_path)
 
-
-    def _move(self, df:pd.DataFrame, source, target):
-        if len(df) == 0: 
+    def _move(self, df: pd.DataFrame, source, target):
+        if len(df) == 0:
             logger.warning('_move null')
             return source, target
         target = pd.concat([target, df], axis=0, ignore_index=True)
         source = source.drop(df.index)
         return source, target
-
 
     def _save(self):
         logger.info('saving files')
@@ -177,9 +160,8 @@ class Manager(object):
         self._save_dirty()
         self._save_skip()
 
-
     def _format_data(self, df):
-        if len(df) == 0: 
+        if len(df) == 0:
             logger.warning('_format_data null')
             return None
         group = df['label'].apply(lambda x: x.split('-'))
@@ -193,32 +175,26 @@ class Manager(object):
         df['备注'] = df['商品说明']
         logger.info(f'formated:\n{df}')
         return df
-    
 
     def _get_label_set(self, df: pd.DataFrame):
         assert '分类' in df.columns and '子分类' in df.columns, '先填入分类和子分类'
         df['子分类'] = df['子分类'].fillna('null')
         df['label'] = df['收支'] + '-' + df['分类'] + '-' + df['子分类']
         return df['label'].value_counts().index
-    
 
     def _get_cat_set(self, df: pd.DataFrame):
         tmp = df['收支'] + '-' + df['分类']
         return tmp.value_counts().index
-    
 
     def _init_dirty(self):
         self.dirty['score'] = 0
         self.dirty['label'] = None
 
-
     def _init_clean(self):
         pass
 
-
     def _init_skip(self):
         pass
-
 
     def _check_label(self, df):
         tmp = df[df['收/支'] != df['label'].apply(lambda x: x[:2])]
