@@ -9,7 +9,7 @@ plt.rcParams['axes.unicode_minus'] = False   # 解决保存图像是负号'-'显
 
 class Plotter(object):
     def __init__(self, folder_path) -> None:
-        logger.info('==>init manager<==')
+        logger.info(f'==>init {__class__.__name__}<==')
 
         # 数据存储
         self.folder_path = folder_path
@@ -29,6 +29,12 @@ class Plotter(object):
         stats = df.groupby(['月份', '分类']).sum('金额').reset_index()
         stats['金额'] = stats['金额'].astype(int)
         return stats[['月份', '分类', '金额']], '月份', '金额', '分类'
+
+    def month_sub_stats(self, year, cat):
+        df = self.clean.query(' 年份 == @year and 分类 == @cat ')
+        stats = df.groupby(['月份', '子分类']).sum('金额').reset_index()
+        stats['金额'] = stats['金额'].astype(int)
+        return stats[['月份', '子分类', '金额']], '月份', '金额', '子分类'
 
     def reload_file(self):
         logger.info('reloading file')

@@ -1,6 +1,7 @@
 import logging
 from cg.manager import Manager
 
+
 def test_manager_label():
     m = Manager('data/go')
     df = m.get_head()
@@ -30,10 +31,10 @@ def test_manager_skip():
 
 
 def test_manager_sub_cls():
-    m = Manager('data/go').init_sub('WxManager')
+    m = Manager.init_sub('WxManager', folder_path='data/go')
     m.get_head()
 
 
 def test_manager_decide_cls():
-    m = Manager('data/go').decide_sub()
+    m = Manager.decide_sub('data/go')
     logging.info(m.__class__.__name__)

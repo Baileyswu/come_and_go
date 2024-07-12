@@ -1,5 +1,7 @@
 import pandas as pd
 from .tools import create_pd_dict
+
+
 class Model(object):
     def __init__(self) -> None:
         self.params = {}
@@ -16,6 +18,6 @@ class Model(object):
         self.params = create_pd_dict(truth, '交易对方', 'label')
         self.scores = create_pd_dict(truth, '交易对方', 'score')
 
-    def predict(self, df:pd.DataFrame):
+    def predict(self, df: pd.DataFrame):
         df['label'] = df['交易对方'].map(self.params)
         df['score'] = df['交易对方'].map(self.scores)

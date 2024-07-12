@@ -1,20 +1,15 @@
 import streamlit as st
 import pandas as pd
-from cg.manager import Manager
 from cg.log import logger
+from pages import init_manager
+
+
+mg = init_manager()
 
 ENTRY = {
     0: '支出',
     1: '收入'
 }
-
-
-@st.cache_resource
-def init_manager():
-    return Manager('data/go').decide_sub()
-
-
-mg = init_manager()
 
 
 def show_selected():

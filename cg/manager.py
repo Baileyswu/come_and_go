@@ -3,21 +3,15 @@ import pandas as pd
 from .tools import save_data, load_cache, create_pd_dict, is_contains
 from .model import Model
 from .log import logger
+from .module import Module
 
 warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
 
 
-class Manager(object):
-
-    subclassdict = {}
-
-    def __init_subclass__(cls):
-        '''子类注册时生成映射表'''
-        Manager.subclassdict.update({cls.__name__: cls})
-        logger.info(f'register: {cls.__name__}')
+class Manager(Module):
 
     def __init__(self, folder_path) -> None:
-        logger.info('==>init manager<==')
+        logger.info(f'==>init {__class__.__name__}<==')
 
         # 数据存储
         self.folder_path = folder_path
@@ -46,29 +40,20 @@ class Manager(object):
         # warning
         self.warn_msg = None
 
-    def init_sub(self, name):
-        '''通过name调用相应的子类'''
-        try:
-            cls = self.subclassdict.get(name)
-            return cls(self.folder_path)
-        except Exception as e:
-            logger.error(e)
-            logger.info(Manager.subclassdict.keys())
-            logger.warning(f'{name} not exists, use default base {
-                           __class__.__name__}')
-            return self
-
-    def decide_sub(self):
+    def decide_sub(folder_path):
         '''
         根据数据列名知晓账单来源，初始化对应的解析器
         '''
-        if is_contains(self.dirty.columns, ['交易时间', '交易类型', '交易对方', '商品', '收/支', '金额(元)', '支付方式', '当前状态', '交易单号',
-                                            '商户单号', '备注']):
-            return self.init_sub('WxManager')
-        if is_contains(self.dirty.columns, ['交易时间', '交易分类', '交易对方', '对方账号', '商品说明', '收/支', '金额', '收/付款方式', '交易状态',
-                                            '交易订单号', '商家订单号', '备注']):
-            return self.init_sub('ZfbManager')
-        return self
+        dirty_path = '/'.join([folder_path, 'dirty.csv'])
+        header = load_cache(dirty_path, head=0).columns
+
+        if is_contains(header, ['交易时间', '交易类型', '交易对方', '商品', '收/支', '金额(元)', '支付方式', '当前状态', '交易单号',
+                                '商户单号', '备注']):
+            return Manager.init_sub('WxManager', folder_path=folder_path)
+        if is_contains(header, ['交易时间', '交易分类', '交易对方', '对方账号', '商品说明', '收/支', '金额', '收/付款方式', '交易状态',
+                                '交易订单号', '商家订单号', '备注']):
+            return Manager.init_sub('ZfbManager', folder_path=folder_path)
+        return Manager(folder_path)
 
     def get_label_set(self):
         logger.info('get_label_set')
