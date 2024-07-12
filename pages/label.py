@@ -1,10 +1,8 @@
 import streamlit as st
 import pandas as pd
 from cg.log import logger
-from pages import init_manager
+from pages import mg
 
-
-mg = init_manager()
 
 ENTRY = {
     0: '支出',

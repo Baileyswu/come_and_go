@@ -1,19 +1,18 @@
 import streamlit as st
 from cg.echarts import bar_stack
 from cg.plotter import Plotter
+from pages import mg
 
 
 @st.cache_resource
 def init_plotter():
-    return Plotter('data/go')
+    return Plotter(mg)
 
 
 plotter = init_plotter()
 
 
 def run():
-    if st.button('重载数据'):
-        plotter.reload_file()
 
     data, x, y, hue = plotter.month_stats(2024, '支出')
     bar_stack(data, x, y, hue)
