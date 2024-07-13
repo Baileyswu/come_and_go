@@ -1,10 +1,10 @@
 import streamlit as st
-from cg.manager import Manager
+from cg.data_container import DataContainer
 
 
 @st.cache_resource
-def init_manager():
-    return Manager.decide_sub('data/go')
+def load_data():
+    return DataContainer.init('data/go')
 
 
-mg = init_manager()
+data = load_data()

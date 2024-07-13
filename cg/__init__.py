@@ -1,2 +1,2 @@
-from .wx_manager import WxManager
-from .zfb_manager import ZfbManager
+from .wx_data import WxData
+from .zfb_data import ZfbData

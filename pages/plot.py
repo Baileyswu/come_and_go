@@ -1,12 +1,12 @@
 import streamlit as st
 from cg.echarts import bar_stack
 from cg.plotter import Plotter
-from pages import mg
+from pages import data
 
 
 @st.cache_resource
 def init_plotter():
-    return Plotter(mg)
+    return Plotter(data)
 
 
 plotter = init_plotter()

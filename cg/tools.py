@@ -86,7 +86,7 @@ def load_cache(path: str, head=None):
             header = pd.read_csv(path, nrows=0).columns
             # 保留原始index进行对齐
             if 'Unnamed: 0' in header:
-                return pd.read_csv(path, index_col=0, nrows=head)
+                return pd.read_csv(path, index_col=0, nrows=head).reset_index()
             return pd.read_csv(path, nrows=head)
         # elif path.endswith(".json"):
         #     from common.json_util import read_json
@@ -106,7 +106,7 @@ def save_data(data, path: str = None):
         logging.warning('file not saved!')
     try:
         if path.endswith(".csv"):
-            data.to_csv(path, encoding='utf-8-sig')
+            data.to_csv(path, encoding='utf-8-sig', index=False)
         # elif path.endswith(".yaml") or path.endswith('.yml'):
         #     save_settings_to_yaml(data, path)
         # elif path.endswith('.json'):

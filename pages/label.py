@@ -1,13 +1,22 @@
 import streamlit as st
 import pandas as pd
+from cg.manager import Manager
 from cg.log import logger
-from pages import mg
+from pages import data
 
 
 ENTRY = {
     0: '支出',
     1: '收入'
 }
+
+
+@st.cache_resource
+def init_manager():
+    return Manager(data)
+
+
+mg = init_manager()
 
 
 def show_selected():
