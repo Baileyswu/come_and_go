@@ -1,22 +1,12 @@
 import streamlit as st
-import pandas as pd
-from cg.manager import Manager
 from cg.log import logger
-from pages import data
+from pages import data, mg
 
 
 ENTRY = {
     0: '支出',
     1: '收入'
 }
-
-
-@st.cache_resource
-def init_manager():
-    return Manager(data)
-
-
-mg = init_manager()
 
 
 def show_selected():
@@ -26,7 +16,7 @@ def show_selected():
 
 
 def show_options():
-    label_set = mg.get_label_set()
+    label_set = data.get_label_set()
     cols = st.columns(2)
     options = [
         cols[i].selectbox(
@@ -72,15 +62,15 @@ def show_skip(con):
 
 def show_reload(con):
     if con.button('重载'):
-        mg.reload_file()
+        data.reload()
 
 
 def show_left(con):
-    con.write(f'还需打标:{mg.get_dirty_size()}')
+    con.write(f'还需打标:{data.get_dirty_size()}')
 
 
 def whole_page():
-    if mg.get_dirty_size() > 0:
+    if data.get_dirty_size() > 0:
         c = st.columns(4)
         show_refresh(c[0])
         show_skip(c[1])

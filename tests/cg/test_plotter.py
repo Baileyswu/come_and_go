@@ -12,3 +12,10 @@ def test_plotter_month_line():
     logging.info(y)
     logging.info(hue)
     logging.info(f'\n{df}')
+
+
+def test_month_detail():
+    p = Plotter(data)
+    df = p.month_detail(2024, 6, '日常生活')
+    logging.info(f'\n{df}')
+    logging.info(df.columns)

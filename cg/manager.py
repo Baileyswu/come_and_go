@@ -1,12 +1,9 @@
-import warnings
 import pandas as pd
 from .tools import save_data, load_cache, create_pd_dict, is_contains
 from .model import Model
 from .log import logger
 from .module import Module
 from .data_container import DataContainer
-
-pd.options.mode.copy_on_write = True
 
 
 class Manager(Module):

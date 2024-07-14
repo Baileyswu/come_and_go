@@ -1,29 +1,11 @@
 import streamlit as st
 from cg.echarts import bar_stack
-from cg.plotter import Plotter
-from pages import data
-
-
-@st.cache_resource
-def init_plotter():
-    return Plotter(data)
-
-
-plotter = init_plotter()
+from pages import plotter
 
 
 def run():
-
-    data, x, y, hue = plotter.month_stats(2024, '支出')
-    bar_stack(data, x, y, hue)
-
-    cats = data['分类'].drop_duplicates().tolist()
-    for cat in cats:
-        data, x, y, hue = plotter.month_sub_stats(2024, cat)
-        bar_stack(data, x, y, hue)
-
-    data, x, y, hue = plotter.month_stats(2024, '收入')
-    bar_stack(data, x, y, hue)
+    plotter.month_stats(2024, '支出')
+    plotter.month_stats(2024, '收入')
 
 
 if __name__ == '__main__':

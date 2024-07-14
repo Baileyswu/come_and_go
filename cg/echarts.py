@@ -28,3 +28,47 @@ def bar_stack(df: pd.DataFrame, x: str, y: str, hue: str):
         ],
     }
     ets.st_echarts(options=options, height="500px")
+
+
+def pie(df: pd.DataFrame, name: str, value: str):
+    names = df[name].tolist()
+    values = df[value].tolist()
+    options = {
+        "tooltip": {
+            "trigger": 'item'
+        },
+        "legend": {
+            "top": '5%',
+            "left": 'center'
+        },
+        "series": [
+            {
+                "name": 'Access From',
+                "type": 'pie',
+                "radius": ['40%', '70%'],
+                "avoidLabelOverlap": False,
+                "padAngle": 5,
+                "itemStyle": {
+                    "borderRadius": 10
+                },
+                "label": {
+                    "show": False,
+                    "position": 'center'
+                },
+                "emphasis": {
+                    "label": {
+                        "show": True,
+                        "fontSize": 40,
+                        "fontWeight": 'bold'
+                    }
+                },
+                "labelLine": {
+                    "show": True
+                },
+                "data": [
+                    {"value": v, "name": n} for v, n in zip(values, names)
+                ]
+            }
+        ]
+    }
+    ets.st_echarts(options=options, height="500px")

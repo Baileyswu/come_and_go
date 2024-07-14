@@ -78,9 +78,14 @@ class DataContainer(Module):
         return df['label'].value_counts().index
 
     def get_cat_set(self):
-        df = self.clean
-        tmp = df['收支'] + '-' + df['分类']
-        return tmp.value_counts().index
+        return self.clean['分类'].value_counts().index
+
+    def get_years(self):
+        return self.clean['年份'].drop_duplicates().tolist()
+
+    def get_months(self, year):
+        df = self.clean.query('年份 == @year')
+        return df['月份'].drop_duplicates().tolist()
 
     def get_dirty_size(self):
         return len(self.dirty) if self.dirty is not None else 0

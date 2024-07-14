@@ -21,8 +21,15 @@ def test_shared_data():
     logging.info(m.data.get_clean_size())
     logging.info(p.data.get_clean_size())
     m.data.clean = m.data.clean.head(10)
+    logging.info(data.get_clean_size())
     logging.info(m.data.get_clean_size())
     logging.info(p.data.get_clean_size())
     assert m.data.get_clean_size() == p.data.get_clean_size()
     assert m.data.get_skip_size() == p.data.get_skip_size()
     assert m.data.get_dirty_size() == p.data.get_dirty_size()
+
+
+def test_get_methods():
+    data = DataContainer.init('data/go')
+    logging.info(data.get_years())
+    logging.info(data.get_months(2024))
