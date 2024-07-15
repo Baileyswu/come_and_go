@@ -43,7 +43,7 @@ def pie(df: pd.DataFrame, name: str, value: str):
         },
         "series": [
             {
-                "name": 'Access From',
+                "name": name,
                 "type": 'pie',
                 "radius": ['40%', '70%'],
                 "avoidLabelOverlap": False,

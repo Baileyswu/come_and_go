@@ -5,6 +5,8 @@ from pages import plotter, data
 
 
 def run():
+    lc, rc = st.columns([1, 1])
+    # with lc:
     cols = st.columns(4)
     year = cols[0].selectbox('选择年份', data.get_years())
     month = cols[1].selectbox('选择月份', data.get_months(year))
@@ -13,6 +15,9 @@ def run():
     logger.info(cat)
     st.write(year, month, cat)
     df = plotter.month_detail(year, month, cat)
+
+    # with rc:
+    st.write('total', df['金额'].sum().round(2))
     st.data_editor(df)
 
 
