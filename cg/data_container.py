@@ -75,10 +75,10 @@ class DataContainer(Module):
         assert '分类' in df.columns and '子分类' in df.columns, '先填入分类和子分类'
         df['子分类'] = df['子分类'].fillna('null')
         df['label'] = df['收支'] + '-' + df['分类'] + '-' + df['子分类']
-        return df['label'].value_counts().index
+        return df['label'].value_counts().index.tolist()
 
     def get_cat_set(self):
-        return self.clean['分类'].value_counts().index
+        return self.clean['分类'].value_counts().index.tolist()
 
     def get_years(self):
         return self.clean['年份'].drop_duplicates().tolist()
@@ -97,10 +97,41 @@ class DataContainer(Module):
         return len(self.skip) if self.skip is not None else 0
 
     def add_clean(self, df: pd.DataFrame):
-        self.clean = pd.concat([self.clean, df], axis=0, ignore_index=True)
+        if len(df) > 0:
+            logger.info(f'add\n{df}')
+            self.clean = pd.concat([self.clean, df], axis=0, ignore_index=True)
 
     def add_skip(self, df: pd.DataFrame):
-        self.skip = pd.concat([self.skip, df], axis=0, ignore_index=True)
+        if len(df) > 0:
+            logger.info(f'add\n{df}')
+            self.skip = pd.concat([self.skip, df], axis=0, ignore_index=True)
 
     def remove_dirty(self, df: pd.DataFrame):
-        self.dirty = self.dirty.drop(df.index)
+        if len(df) > 0:
+            logger.info(f'remove\n{df}')
+            self.dirty = self.dirty.drop(df.index)
+
+    def remove_clean(self, ids):
+        if len(ids) > 0:
+            logger.info(f'remove {ids}')
+            self.clean = self.clean.drop(ids)
+
+    def format_data(self, df: pd.DataFrame):
+        if len(df) == 0:
+            logger.warning('format_data null')
+            return None
+        logger.info('format data')
+        if '交易时间' in df.columns:
+            dtime = pd.to_datetime(df['交易时间'])
+            df['日期'] = dtime.dt.date
+            df['月份'] = dtime.dt.month
+            df['年份'] = dtime.dt.year
+        if '商品说明' in df.columns:
+            df['备注'] = df['商品说明']
+        if 'label' in df.columns:
+            group = df['label'].apply(lambda x: x.split('-'))
+            df['收支'] = group.apply(lambda x: x[0])
+            df['分类'] = group.apply(lambda x: x[1])
+            df['子分类'] = group.apply(lambda x: x[2])
+        logger.info(f'formated:\n{df}')
+        return df

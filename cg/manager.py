@@ -46,7 +46,7 @@ class Manager(Module):
         if len(sp) == 0:
             logger.info('no more sweep')
             return None
-        self._format_data(sp)
+        self.data.format_data(sp)
         sp = self._check_label(sp)
         self.data.add_clean(sp)
         self.data.remove_dirty(sp)
@@ -57,12 +57,31 @@ class Manager(Module):
         logger.info('get_label_and_move...')
         df['label'] = label
         df['score'] = 1
-        self._format_data(df)
+        self.data.format_data(df)
         df = self._check_label(df)
         self.data.add_clean(df)
         self.data.remove_dirty(df)
         self.data.save()
         return df[self.show_cols]
+
+    def update_clean(self, changes: dict, idx: list):
+        logger.info('update clean')
+
+        add_rows = changes.get('added_rows')
+        edited_rows = changes.get('edited_rows')
+        deleted_rows = changes.get('deleted_rows')
+
+        if edited_rows is not None and len(edited_rows) > 0:
+            edited_rows = {idx[k]: v for k, v in edited_rows.items()}
+            self._edit_data(edited_rows)
+        if add_rows is not None and len(add_rows) > 0:
+            self._add_data(add_rows)
+        if deleted_rows is not None and len(deleted_rows) > 0:
+            deleted_rows = [idx[i] for i in deleted_rows]
+            self._delete_data(deleted_rows)
+
+        # 保存数据
+        self.data.save_clean()
 
     def skip_label(self, df: pd.DataFrame):
         '''把一些不打标的数据直接转移到skip中'''
@@ -77,22 +96,6 @@ class Manager(Module):
         similar = self.data.dirty.query('score > 0.8')
         return similar
 
-    def _format_data(self, df):
-        if len(df) == 0:
-            logger.warning('_format_data null')
-            return None
-        group = df['label'].apply(lambda x: x.split('-'))
-        dtime = pd.to_datetime(df['交易时间'])
-        df['收支'] = group.apply(lambda x: x[0])
-        df['分类'] = group.apply(lambda x: x[1])
-        df['子分类'] = group.apply(lambda x: x[2])
-        df['日期'] = dtime.dt.date
-        df['月份'] = dtime.dt.month
-        df['年份'] = dtime.dt.year
-        df['备注'] = df['商品说明']
-        logger.info(f'formated:\n{df}')
-        return df
-
     def _check_label(self, df: pd.DataFrame):
         tmp = df[df['收/支'] != df['label'].apply(lambda x: x[:2])]
         df = df.drop(tmp.index)
@@ -101,3 +104,24 @@ class Manager(Module):
             logger.warning(self.warn_msg)
             return df
         return df
+
+    def _edit_data(self, rows):
+        '''编辑修改'''
+        logger.info('_edit_data')
+        for idx, row in rows.items():
+            for name, value in row.items():
+                self.data.clean.loc[self.data.clean.index[idx], name] = value
+
+    def _delete_data(self, row):
+        '''删除'''
+        logger.info('_delete_data')
+        self.data.remove_clean(row)
+
+    def _add_data(self, rows):
+        '''增加'''
+        logger.info('_add_data')
+        start_id = self.data.clean.index.max() + 1
+        df = pd.DataFrame(rows).set_index(
+            pd.Index(range(start_id, len(rows)+start_id)))
+        df = self.data.format_data(df)
+        self.data.add_clean(df)
