@@ -1,10 +1,10 @@
 import logging
 from cg.manager import Manager
 from cg.data_container import DataContainer
-data = DataContainer.init('data/go')
 
 
 def test_manager_head():
+    data = DataContainer.init('data/go')
     m = Manager(data)
     logging.info(f'manager head \n{m.head}')
     df = m.get_head()
@@ -14,12 +14,14 @@ def test_manager_head():
 
 
 def test_manager_label():
+    data = DataContainer.init('data/go')
     m = Manager(data)
     df = m.get_head()
     m.get_label_and_move(df, '支出-交通-燃料/充电')
 
 
 def test_manager_sweep():
+    data = DataContainer.init('data/go')
     m = Manager(data)
     df = m.get_head()
     m.get_label_and_move(df, '支出-交通-燃料/充电')
@@ -27,6 +29,7 @@ def test_manager_sweep():
 
 
 def test_manager_skip():
+    data = DataContainer.init('data/go')
     m = Manager(data)
     df = m.get_head()
     m.skip_label(df)
@@ -34,6 +37,7 @@ def test_manager_skip():
 
 def test_manager_update():
     import pandas as pd
+    data = DataContainer.init('data/go')
     m = Manager(data)
     df = pd.DataFrame({
         '交易时间': ['2024-07-16'],

@@ -124,6 +124,15 @@ def save_data(data, path: str = None):
     return data
 
 
+def append_path_file(path, filename):
+    group = path.split('.')
+    if len(group) > 1:
+        end = len(group[-1])
+        return path[:-end] + filename
+    else:
+        return '.'.join([path, filename])
+
+
 def log_feature_complete_rate(df: pd.DataFrame):
     stats = 1-df.isna().sum()/len(df)
     stats = stats.sort_values()

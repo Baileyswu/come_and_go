@@ -31,12 +31,12 @@ class DataContainer(Module):
         dirty_path = '/'.join([folder_path, 'dirty.csv'])
         header = load_cache(dirty_path, head=0).columns
 
-        if is_contains(header, ['交易时间', '交易类型', '交易对方', '商品', '收/支', '金额(元)', '支付方式', '当前状态', '交易单号',
-                                '商户单号', '备注']):
-            return DataContainer.init_sub('WxData', folder_path=folder_path)
         if is_contains(header, ['交易时间', '交易分类', '交易对方', '对方账号', '商品说明', '收/支', '金额', '收/付款方式', '交易状态',
                                 '交易订单号', '商家订单号', '备注']):
             return DataContainer.init_sub('ZfbData', folder_path=folder_path)
+        if is_contains(header, ['交易时间', '交易类型', '交易对方', '商品', '收/支', '金额(元)', '支付方式', '当前状态', '交易单号',
+                                '商户单号', '备注']):
+            return DataContainer.init_sub('WxData', folder_path=folder_path)
         return DataContainer(folder_path)
 
     def reload(self):
@@ -115,6 +115,11 @@ class DataContainer(Module):
         if len(ids) > 0:
             logger.info(f'remove {ids}')
             self.clean = self.clean.drop(ids)
+
+    def remove_skip(self, df: pd.DataFrame):
+        if len(df) > 0:
+            logger.info(f'remove\n{df}')
+            self.skip = self.skip.drop(df.index)
 
     def format_data(self, df: pd.DataFrame):
         if len(df) == 0:
